@@ -27,7 +27,7 @@
     body { background-color: #09090b; color: #f4f4f5; }
     .card { background-color: #121215; border: 1px solid #27272a; border-radius: 0.5rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
     textarea::placeholder { color: #52525b; }
-    .badge { display: inline-flex; align-items: center; gap: 0.375rem; background: rgba(39,39,42,0.9); color: #fbbf24; border: 1px solid rgba(63,63,70,0.6); font-size: 0.75rem; font-family: monospace; padding: 0.25rem 0.625rem; border-radius: 0.375rem; }
+    .badge { display: inline-flex; align-items: center; gap: 0.375rem; background: rgba(39,39,42,0.9); color: #fbbf24; border: 1px solid rgba(251,191,36,0.35); font-size: 0.75rem; font-family: monospace; padding: 0.25rem 0.625rem; border-radius: 0.375rem; }
     .badge-support { color: #a78bfa; border-color: rgba(139,92,246,0.3); }
     .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #d97706; color: #09090b; font-weight: 600; padding: 0.625rem 1rem; border-radius: 0.375rem; transition: all 0.15s; box-shadow: 0 4px 6px -1px rgba(217,119,6,0.2); cursor: pointer; border: none; font-size: 0.875rem; }
     .btn-primary:hover { background-color: #b45309; }
@@ -44,7 +44,7 @@
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-amber-400">Mercenary Warrant Evaluator</h1>
-        <p class="text-sm text-zinc-500 mt-1">Paste warrant text &rarr; get PoE trade links instantly</p>
+        <p class="text-sm text-zinc-500 mt-1">Hover over a Mercenary Warrant in-game, press <kbd class="inline-block px-1.5 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300">Ctrl</kbd> + <kbd class="inline-block px-1.5 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300">C</kbd> and paste the text below.</p>
       </div>
       <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" rel="noopener" class="text-sm text-amber-500/80 hover:text-amber-400 underline transition-colors">
         CptLance Merc Guide &rarr;
@@ -68,12 +68,8 @@
         <div id="parsedSection" class="hidden space-y-3">
           <div id="metaBadges" class="flex flex-wrap gap-2"></div>
           <div class="border-t border-zinc-800 pt-3">
-            <p class="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wider">Active Skills</p>
-            <div id="skillBadges" class="flex flex-wrap gap-1.5"></div>
-          </div>
-          <div class="border-t border-zinc-800 pt-3">
-            <p class="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wider">Support Skills</p>
-            <div id="supportBadges" class="flex flex-wrap gap-1.5"></div>
+            <p class="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wider">Skill Links</p>
+            <div id="skillGroups" class="space-y-2"></div>
           </div>
           <div class="flex flex-wrap gap-2 pt-2">
             <button id="tradeBtn" class="btn-primary">
@@ -93,10 +89,10 @@
         </div>
       </section>
 
-      <!-- CptLance Presets -->
+      <!-- Popular Presets -->
       <section class="card space-y-4">
-        <h2 class="text-lg font-semibold text-zinc-100">CptLance Presets</h2>
-        <p class="text-xs text-zinc-500">Recommended mercenary builds from <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" class="text-amber-500/80 hover:text-amber-400 underline">mobalytics.gg</a></p>
+        <h2 class="text-lg font-semibold text-zinc-100">Popular Presets</h2>
+        <p class="text-xs text-zinc-500">Suggestions from <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" class="text-amber-500/80 hover:text-amber-400 underline">Luminary build</a> by Cpt Lance</p>
         <div id="presetsList" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
       </section>
     </div>
@@ -109,7 +105,7 @@
 
   <script>
     // --- Configuration ---
-    const LEAGUE = 'Settlers';
+    const LEAGUE = 'Allflame';
 
     // Skill name → PoE trade stat ID mapping (generated from ressources/mercenaries.json)
     const SKILL_STAT_MAP = {
@@ -670,30 +666,41 @@
       const build = buildMatch ? buildMatch[1].trim() : 'Unknown';
       const level = levelMatch ? parseInt(levelMatch[1], 10) : 0;
 
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      const sections = text.split('--------').map(s => s.trim()).filter(Boolean);
+      const groups = [];
       const actives = [];
       const supports = [];
-      let lastActive = null;
 
-      for (const line of lines) {
-        if (ACTIVE_SKILLS.has(line)) {
-          lastActive = line;
-          actives.push(line);
-        } else if (SUPPORT_SKILLS.has(line)) {
-          supports.push(line);
-        } else {
-          const supportMatch = line.match(/^(.+?)\s*\(Tier:\s*\d+\)/);
-          if (supportMatch) {
-            const baseName = supportMatch[1].trim();
-            if (SUPPORT_SKILLS.has(baseName)) {
-              supports.push(baseName);
-              lastActive = null;
+      for (const section of sections) {
+        const sectionLines = section.split('\n').map(l => l.trim()).filter(Boolean);
+        let active = null;
+        const linked = [];
+
+        for (const line of sectionLines) {
+          if (ACTIVE_SKILLS.has(line)) {
+            active = line;
+            actives.push(line);
+          } else {
+            const supportMatch = line.match(/^(.+?)\s*\(Tier:\s*(\d+)\)/);
+            if (supportMatch) {
+              const baseName = supportMatch[1].trim();
+              const tier = supportMatch[2];
+              if (SUPPORT_SKILLS.has(baseName)) {
+                supports.push(baseName);
+                if (active) {
+                  linked.push({ name: baseName, tier });
+                }
+              }
             }
           }
         }
+
+        if (active) {
+          groups.push({ active, linked });
+        }
       }
 
-      return { name, build, level, actives, supports };
+      return { name, build, level, actives, supports, groups };
     }
 
     // --- Trade URL Generator ---
@@ -703,7 +710,7 @@
         .map(skill => {
           const statId = SKILL_STAT_MAP[skill];
           if (!statId || statId.startsWith('TODO_')) return null;
-          return { id: statId, value: { min: 1 }, condition: 'or' };
+          return { id: statId, value: { min: 1 } };
         })
         .filter(Boolean);
 
@@ -712,7 +719,7 @@
       const payload = {
         query: {
           status: { option: 'online' },
-          stats: [{ type: 'and', filters: [{ type: 'or', filters }] }]
+          stats: [{ type: 'and', filters }]
         },
         sort: { price: 'asc' }
       };
@@ -723,28 +730,46 @@
     // --- Presets ---
     const PRESETS = [
       {
-        name: 'Kineticist &mdash; BiS Clear Merc',
+        name: 'Kineticist \u2014 BiS Clear Merc',
         role: 'Map Clearing',
         note: 'Best-in-slot for map clearing. Avoid Kinetic Bolt &mdash; it breaks the AI.',
-        skills: ['Kinetic Blast of Clustering', 'Multiple Projectiles', 'Haste', 'Inspiring Cry']
+        groups: [
+          { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles', 'Haste'] },
+          { active: 'Inspiring Cry', linked: [] }
+        ]
       },
       {
-        name: 'Manyshot &mdash; Clear / Single Target',
+        name: 'Manyshot \u2014 Clear / Single Target',
         role: 'Hybrid',
         note: 'Strong clear and single-target. Avoid Icicle Rain &mdash; it interrupts Vaal Ice Shot.',
-        skills: ['Ice Shot', 'Vaal Ice Shot', 'Multiple Projectiles', 'Elemental Damage with Attacks', 'Cooldown Recovery', 'Grace', 'Hatred', 'Frost Bomb']
+        groups: [
+          { active: 'Ice Shot', linked: ['Multiple Projectiles', 'Elemental Damage with Attacks'] },
+          { active: 'Vaal Ice Shot', linked: [] },
+          { active: 'Frost Bomb', linked: ['Cooldown Recovery'] },
+          { active: 'Grace', linked: [] },
+          { active: 'Hatred', linked: [] }
+        ]
       },
       {
         name: 'Blade Ambusher &mdash; Bossing',
         role: 'Single Target',
         note: 'Trap-based boss killer with high single-target damage.',
-        skills: ['Spectral Helix of Trarthus', 'Multiple Traps', 'Trap and Mine Damage', 'Slower Projectiles', 'Grace', 'Summon Skitterbots']
+        groups: [
+          { active: 'Spectral Helix of Trarthus', linked: ['Multiple Traps', 'Trap and Mine Damage', 'Slower Projectiles'] },
+          { active: 'Grace', linked: [] },
+          { active: 'Summon Skitterbots', linked: [] }
+        ]
       },
       {
         name: 'Combatant &mdash; All-Rounder',
         role: 'Starter / General',
         note: 'Good starter merc. Scales well with armor stacking late game.',
-        skills: ['Static Strike', 'Frost Blades', 'Elemental Damage with Attacks', 'More Duration', 'Chain', 'Wrath', 'Purity of Ice']
+        groups: [
+          { active: 'Static Strike', linked: ['Elemental Damage with Attacks', 'More Duration', 'Chain'] },
+          { active: 'Frost Blades', linked: [] },
+          { active: 'Wrath', linked: [] },
+          { active: 'Purity of Ice', linked: [] }
+        ]
       }
     ];
 
@@ -753,8 +778,7 @@
     const parsedSection = document.getElementById('parsedSection');
     const errorSection = document.getElementById('errorSection');
     const metaBadges = document.getElementById('metaBadges');
-    const skillBadges = document.getElementById('skillBadges');
-    const supportBadges = document.getElementById('supportBadges');
+    const skillGroups = document.getElementById('skillGroups');
     const tradeBtn = document.getElementById('tradeBtn');
     const copyBtn = document.getElementById('copyBtn');
     const copyFeedback = document.getElementById('copyFeedback');
@@ -786,8 +810,20 @@
         metaBadges.innerHTML += '<span class="badge" style="color: #86efac;">Level ' + parsed.level + '</span>';
       }
 
-      skillBadges.innerHTML = parsed.actives.map(s => '<span class="badge">' + escapeHtml(s) + '</span>').join('');
-      supportBadges.innerHTML = parsed.supports.map(s => '<span class="badge badge-support">' + escapeHtml(s) + '</span>').join('');
+      skillGroups.innerHTML = '';
+      if (parsed.groups && parsed.groups.length > 0) {
+        for (const group of parsed.groups) {
+          const row = document.createElement('div');
+          row.className = 'flex flex-wrap items-center gap-1.5';
+          row.innerHTML = '<span class="badge">' + escapeHtml(group.active) + '</span>';
+          for (const sup of group.linked) {
+            row.innerHTML += ' <span class="badge badge-support">' + escapeHtml(sup.name) + ' (T' + sup.tier + ')</span>';
+          }
+          skillGroups.appendChild(row);
+        }
+      } else {
+        skillGroups.innerHTML = parsed.actives.map(s => '<span class="badge">' + escapeHtml(s) + '</span>').join('');
+      }
 
       currentUrl = generateTradeUrl(parsed);
       tradeBtn.style.display = currentUrl ? '' : 'none';
@@ -843,7 +879,12 @@
         const card = document.createElement('div');
         card.className = 'bg-zinc-900/50 border border-zinc-800 rounded-md p-3 space-y-2';
 
-        const filters = preset.skills
+        const allSkills = [];
+        for (const g of preset.groups) {
+          allSkills.push(g.active);
+          for (const l of g.linked) allSkills.push(l);
+        }
+        const filters = allSkills
           .map(skill => {
             const statId = SKILL_STAT_MAP[skill];
             if (!statId || statId.startsWith('TODO_')) return null;
@@ -870,6 +911,17 @@
           'Starter / General': 'bg-amber-900/40 text-amber-400 border-amber-800/50'
         };
 
+        let groupsHtml = '<div class="space-y-1.5">';
+        for (const g of preset.groups) {
+          groupsHtml += '<div class="flex flex-wrap items-center gap-1">' +
+            '<span class="badge text-[10px] py-0.5">' + escapeHtml(g.active) + '</span>';
+          for (const l of g.linked) {
+            groupsHtml += ' <span class="badge badge-support text-[10px] py-0.5">' + escapeHtml(l) + '</span>';
+          }
+          groupsHtml += '</div>';
+        }
+        groupsHtml += '</div>';
+
         card.innerHTML = '<div class="flex items-start justify-between gap-2">' +
           '<div>' +
           '<h3 class="font-semibold text-sm text-zinc-100">' + escapeHtml(preset.name) + '</h3>' +
@@ -877,9 +929,7 @@
           '</div>' +
           '</div>' +
           '<p class="text-xs text-zinc-500">' + escapeHtml(preset.note) + '</p>' +
-          '<div class="flex flex-wrap gap-1">' +
-          preset.skills.map(s => '<span class="badge text-[10px] py-0.5">' + escapeHtml(s) + '</span>').join('') +
-          '</div>' +
+          groupsHtml +
           (presetUrl ? '<a href="' + presetUrl + '" target="_blank" rel="noopener" class="btn-primary text-xs py-1.5 px-3">' +
             '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>' +
             'Search Trade' +
