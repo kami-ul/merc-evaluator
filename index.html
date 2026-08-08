@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PoE 1 Mercenary Evaluator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            poe: {
+              bg: '#09090b',
+              card: '#121215',
+              border: '#27272a',
+              gold: '#d97706',
+              goldHover: '#b45309',
+              crimson: '#dc2626',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #09090b; color: #f4f4f5; }
+    .card { background-color: #121215; border: 1px solid #27272a; border-radius: 0.5rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+    textarea::placeholder { color: #52525b; }
+    .badge { display: inline-flex; align-items: center; gap: 0.375rem; background: rgba(39,39,42,0.9); color: #fbbf24; border: 1px solid rgba(63,63,70,0.6); font-size: 0.75rem; font-family: monospace; padding: 0.25rem 0.625rem; border-radius: 0.375rem; }
+    .badge-support { color: #a78bfa; border-color: rgba(139,92,246,0.3); }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #d97706; color: #09090b; font-weight: 600; padding: 0.625rem 1rem; border-radius: 0.375rem; transition: all 0.15s; box-shadow: 0 4px 6px -1px rgba(217,119,6,0.2); cursor: pointer; border: none; font-size: 0.875rem; }
+    .btn-primary:hover { background-color: #b45309; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 0.375rem; transition: all 0.15s; cursor: pointer; font-size: 0.875rem; }
+    .btn-secondary:hover { background-color: #3f3f46; }
+    .clear-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; border-radius: 0.25rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; }
+    .clear-btn:hover { background: #3f3f46; color: #e4e4e7; }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-amber-400">Mercenary Warrant Evaluator</h1>
+        <p class="text-sm text-zinc-500 mt-1">Paste warrant text &rarr; get PoE trade links instantly</p>
+      </div>
+      <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" rel="noopener" class="text-sm text-amber-500/80 hover:text-amber-400 underline transition-colors">
+        CptLance Merc Guide &rarr;
+      </a>
+    </header>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Warrant Evaluator -->
+      <section class="card space-y-4">
+        <h2 class="text-lg font-semibold text-zinc-100">Warrant Parser</h2>
+        <div class="relative">
+          <textarea
+            id="warrantInput"
+            placeholder="Paste Mercenary Warrant text here..."
+            class="w-full h-64 bg-zinc-950/50 border border-zinc-800 rounded-md p-3 pr-16 font-mono text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all resize-y"
+          ></textarea>
+          <button id="clearBtn" class="clear-btn" title="Clear">✕ Clear</button>
+        </div>
+
+        <div id="parsedSection" class="hidden space-y-3">
+          <div id="metaBadges" class="flex flex-wrap gap-2"></div>
+          <div class="border-t border-zinc-800 pt-3">
+            <p class="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wider">Active Skills</p>
+            <div id="skillBadges" class="flex flex-wrap gap-1.5"></div>
+          </div>
+          <div class="border-t border-zinc-800 pt-3">
+            <p class="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wider">Support Skills</p>
+            <div id="supportBadges" class="flex flex-wrap gap-1.5"></div>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-2">
+            <button id="tradeBtn" class="btn-primary">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              Open in PoE Trade
+            </button>
+            <button id="copyBtn" class="btn-secondary">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              Copy Trade Link
+            </button>
+          </div>
+          <div id="copyFeedback" class="hidden text-xs text-green-400 mt-1">Link copied to clipboard!</div>
+        </div>
+
+        <div id="errorSection" class="hidden text-sm text-red-400/80 bg-red-950/30 border border-red-900/50 rounded-md p-3">
+          No valid mercenary skills detected. Paste a Mercenary Warrant to begin.
+        </div>
+      </section>
+
+      <!-- CptLance Presets -->
+      <section class="card space-y-4">
+        <h2 class="text-lg font-semibold text-zinc-100">CptLance Presets</h2>
+        <p class="text-xs text-zinc-500">Recommended mercenary builds from <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" class="text-amber-500/80 hover:text-amber-400 underline">mobalytics.gg</a></p>
+        <div id="presetsList" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-zinc-600 pt-4">
+      PoE 1 Mercenary Evaluator &middot; Client-side only, no data collected
+    </footer>
+  </div>
+
+  <script>
+    // --- Configuration ---
+    const LEAGUE = 'Settlers';
+
+    // Skill name → PoE trade stat ID mapping (generated from ressources/mercenaries.json)
+    const SKILL_STAT_MAP = {
+  'Spark': 'mercenary.skill_5893',
+  'Conductivity': 'mercenary.skill_41484',
+  'Orb of Storms': 'mercenary.skill_11879',
+  'Greater Stormcall': 'mercenary.skill_3148',
+  'Stormcall': 'mercenary.skill_7549',
+  'Arc': 'mercenary.skill_59005',
+  'Greater Shock Nova': 'mercenary.skill_50290',
+  'Lightning Warp': 'mercenary.skill_28757',
+  'Frost Bomb': 'mercenary.skill_10557',
+  'Frostbolt': 'mercenary.skill_33663',
+  'Vortex': 'mercenary.skill_31928',
+  'Ice Nova': 'mercenary.skill_61497',
+  'Ice Nova of Projection': 'mercenary.skill_61471',
+  'Flame Wall': 'mercenary.skill_57450',
+  'Frost Wall': 'mercenary.skill_50009',
+  'Icestorm': 'mercenary.skill_28637',
+  'Flammability': 'mercenary.skill_40521',
+  'Frostbite': 'mercenary.skill_6479',
+  'Eye of Winter': 'mercenary.skill_57063',
+  'Frostblink': 'mercenary.skill_40470',
+  'Flame Dash': 'mercenary.skill_56180',
+  'Greater Flame Dash': 'mercenary.skill_24099',
+  'Flameblast': 'mercenary.skill_6446',
+  'Flame Surge': 'mercenary.skill_8801',
+  'Flame Aegis': 'mercenary.skill_50414',
+  'Vaal Flameblast': 'mercenary.skill_29426',
+  'Fireball': 'mercenary.skill_324',
+  'Fireball of Impact': 'mercenary.skill_37821',
+  'Rolling Magma': 'mercenary.skill_30130',
+  'Anger': 'mercenary.skill_13235',
+  'Purity of Fire': 'mercenary.skill_33728',
+  'Purity of Ice': 'mercenary.skill_13693',
+  'Purity of Lightning': 'mercenary.skill_63233',
+  'Sigil of Power': 'mercenary.skill_33661',
+  'Ball Lightning of Static': 'mercenary.skill_30663',
+  'Discipline': 'mercenary.skill_21708',
+  'Wrath': 'mercenary.skill_38326',
+  'Temporal Chains': 'mercenary.skill_7383',
+  'Bane': 'mercenary.skill_63468',
+  'Proximity Shield': 'mercenary.skill_16018',
+  'Withering Step': 'mercenary.skill_10320',
+  'Clarity': 'mercenary.skill_28785',
+  'Wither Totem': 'mercenary.skill_1911',
+  'Malevolence': 'mercenary.skill_1516',
+  'Greater Soulrend': 'mercenary.skill_11671',
+  'Altar of Chaos': 'mercenary.skill_50670',
+  'Essence Drain of Wickedness': 'mercenary.skill_39669',
+  'Scourstorm': 'mercenary.skill_13441',
+  'Blight': 'mercenary.skill_8450',
+  'Bodyswap': 'mercenary.skill_4927',
+  'Pride': 'mercenary.skill_18793',
+  'Vaal Vitality': 'mercenary.skill_14889',
+  'Reap': 'mercenary.skill_14064',
+  'Corrupted Blade Vortex of the Scythe': 'mercenary.skill_8958',
+  'Vaal Reap': 'mercenary.skill_1185',
+  'Exsanguinate': 'mercenary.skill_40439',
+  'Boiling Blood': 'mercenary.skill_44422',
+  'Blasphemy Enfeeble': 'mercenary.skill_26391',
+  'Desecrate': 'mercenary.skill_21523',
+  'Bone Offering': 'mercenary.skill_44467',
+  'Flesh Offering': 'mercenary.skill_61730',
+  'Relic of Binding': 'mercenary.skill_62758',
+  'Summon Skeletons': 'mercenary.skill_17409',
+  'Summon Raging Spirit': 'mercenary.skill_19108',
+  'Raise Zombie of Gigantism': 'mercenary.skill_52491',
+  'Raise Zombie of Falling': 'mercenary.skill_57377',
+  'Soulrend of Reaping': 'mercenary.skill_10742',
+  'Voltaxic Burst': 'mercenary.skill_52144',
+  'Void Sphere': 'mercenary.skill_52783',
+  'Dark Bargain': 'mercenary.skill_35371',
+  'Profane Cascade': 'mercenary.skill_51539',
+  'Summon Seeking Void': 'mercenary.skill_54144',
+  'Forbidden Rite Totem': 'mercenary.skill_29071',
+  'Despair': 'mercenary.skill_56742',
+  'Envy': 'mercenary.skill_17515',
+  'Zealotry': 'mercenary.skill_14498',
+  'Smoke Mine': 'mercenary.skill_64528',
+  'Grace': 'mercenary.skill_2792',
+  'Summon Skitterbots': 'mercenary.skill_44296',
+  'Vaal Lightning Trap': 'mercenary.skill_25149',
+  'Trarthan Agility': 'mercenary.skill_38072',
+  'Spectral Throw of Trarthus': 'mercenary.skill_62393',
+  'Spectral Helix of Trarthus': 'mercenary.skill_28988',
+  'Bear Trap': 'mercenary.skill_13711',
+  'Blade Trap': 'mercenary.skill_11054',
+  'Ball Lightning of Orbiting Trap': 'mercenary.skill_37561',
+  'Lightning Warp Trap': 'mercenary.skill_5247',
+  'Lightning Spire Trap': 'mercenary.skill_8075',
+  'Lightning Trap': 'mercenary.skill_17037',
+  'Unnerving Blast': 'mercenary.skill_19034',
+  'Charged Dash of the Arcane': 'mercenary.skill_5673',
+  'Tornado of Elemental Turbulence': 'mercenary.skill_23225',
+  'Arctic Armour': 'mercenary.skill_55367',
+  'Frost Shield': 'mercenary.skill_57491',
+  'Ice Trap': 'mercenary.skill_62997',
+  'Vaal Arctic Armour': 'mercenary.skill_44455',
+  'Greater Vortex Trap': 'mercenary.skill_3493',
+  'Creeping Frost Trap': 'mercenary.skill_9321',
+  'Divine Retribution': 'mercenary.skill_24685',
+  'Divine Ire': 'mercenary.skill_45226',
+  'Shockwave Totem of Shocking': 'mercenary.skill_6651',
+  'Wave of Conviction': 'mercenary.skill_14732',
+  'Herald of Ash': 'mercenary.skill_44334',
+  'Wave of Conviction of Trarthus': 'mercenary.skill_4286',
+  'Holy Mortar': 'mercenary.skill_1577',
+  'Meteor': 'mercenary.skill_40723',
+  'Purifying Flame': 'mercenary.skill_17763',
+  'Scorching Ray Totem': 'mercenary.skill_47293',
+  'Holy Flame Totem': 'mercenary.skill_47949',
+  'Vaal Caustic Arrow': 'mercenary.skill_36274',
+  'Caustic Arrow': 'mercenary.skill_58174',
+  'Chaotic Burst': 'mercenary.skill_26913',
+  'Chaotic Shot': 'mercenary.skill_18986',
+  'Toxic Rain': 'mercenary.skill_38628',
+  'Scourge Arrow of Menace': 'mercenary.skill_28502',
+  'Intimidating Cry': 'mercenary.skill_38311',
+  'Ground Slam': 'mercenary.skill_53728',
+  'Leap Slam': 'mercenary.skill_2135',
+  'Molten Shell': 'mercenary.skill_21036',
+  'Endure': 'mercenary.skill_57171',
+  'Burrow': 'mercenary.skill_31440',
+  'Sunder of Trarthus': 'mercenary.skill_17654',
+  'Tectonic Cascade': 'mercenary.skill_40527',
+  'Earthquake of Amplification': 'mercenary.skill_41346',
+  'Determination': 'mercenary.skill_52845',
+  'Vaal Ground Slam': 'mercenary.skill_10712',
+  'Infernal Cry': 'mercenary.skill_59259',
+  'Volcanic Fissure of Snaking': 'mercenary.skill_53235',
+  'Flame Link': 'mercenary.skill_47364',
+  'Ashen Fissure': 'mercenary.skill_42361',
+  'Consecrated Path': 'mercenary.skill_3093',
+  'Triggerslam': 'mercenary.skill_18149',
+  'Tectonic Slam': 'mercenary.skill_6228',
+  'Ice Crash': 'mercenary.skill_11018',
+  'Glacial Hammer': 'mercenary.skill_53217',
+  'Vaal Glacial Hammer': 'mercenary.skill_47031',
+  'Earthquake of Winter': 'mercenary.skill_14816',
+  'Heavy Strike of Trarthus': 'mercenary.skill_38103',
+  'Dual Strike': 'mercenary.skill_10235',
+  'Hatred': 'mercenary.skill_24482',
+  'Vaal Burning Arrow': 'mercenary.skill_23512',
+  'Blast Rain of Trarthus': 'mercenary.skill_18004',
+  'Blasphemy Flammability': 'mercenary.skill_39298',
+  "Alchemist's Mark": 'mercenary.skill_24179',
+  'Burning Arrow': 'mercenary.skill_34665',
+  'Molten Well': 'mercenary.skill_59200',
+  'Artillery Ballista': 'mercenary.skill_35610',
+  'Explosive Arrow': 'mercenary.skill_36298',
+  'Cyclone of the Empire': 'mercenary.skill_46739',
+  'Vaal Double Strike': 'mercenary.skill_37132',
+  'Holy Sweep': 'mercenary.skill_7395',
+  'Rallying Cry': 'mercenary.skill_39265',
+  'Triggerblades': 'mercenary.skill_28026',
+  'Steelskin Ally': 'mercenary.skill_17105',
+  'Flicker Strike': 'mercenary.skill_61669',
+  'Incite': 'mercenary.skill_59409',
+  'Bladestorm': 'mercenary.skill_12357',
+  'Bloodthirst': 'mercenary.skill_60880',
+  'Oil Slick': 'mercenary.skill_19268',
+  'Lacerate': 'mercenary.skill_8136',
+  'Perforate': 'mercenary.skill_54006',
+  'Blood Mortar': 'mercenary.skill_26931',
+  'Kinetic Bolt': 'mercenary.skill_12583',
+  'Kinetic Blast of Clustering': 'mercenary.skill_16356',
+  'Power Siphon': 'mercenary.skill_26705',
+  'Barrage': 'mercenary.skill_1356',
+  'Greater Kinetic Blast': 'mercenary.skill_44258',
+  'Inspiring Cry': 'mercenary.skill_65473',
+  'Elemental Weakness': 'mercenary.skill_5689',
+  'Ensnaring Arrow': 'mercenary.skill_12667',
+  "Poacher's Mark": 'mercenary.skill_27805',
+  'Rain of Arrows of Saturation': 'mercenary.skill_40759',
+  'Siege Ballista of Trarthus': 'mercenary.skill_44144',
+  'Tornado Shot': 'mercenary.skill_8030',
+  'Shrapnel Ballista': 'mercenary.skill_61903',
+  'Greater Split Arrow': 'mercenary.skill_8546',
+  'Split Arrow': 'mercenary.skill_43202',
+  'Puncture': 'mercenary.skill_30431',
+  'Lightning Arrow': 'mercenary.skill_41051',
+  'Vaal Lightning Arrow': 'mercenary.skill_22000',
+  'Storm Rain': 'mercenary.skill_17216',
+  'Precision': 'mercenary.skill_36279',
+  "Assassin's Mark": 'mercenary.skill_47406',
+  'Galvanic Arrow': 'mercenary.skill_27165',
+  'Greater Lightning Arrow': 'mercenary.skill_38993',
+  'Cleave': 'mercenary.skill_8445',
+  'Leap Slam of Groundbreaking': 'mercenary.skill_41915',
+  'Vigilant Strike': 'mercenary.skill_4988',
+  'Heavy Strike of Vulnerability': 'mercenary.skill_64565',
+  'Boneshatter': 'mercenary.skill_22696',
+  'Decoy Totem': 'mercenary.skill_38104',
+  'Vaal Ancestral Warchief': 'mercenary.skill_38521',
+  'Vitality': 'mercenary.skill_40419',
+  'Tunnelslam': 'mercenary.skill_52105',
+  'Enduring Cry': 'mercenary.skill_20973',
+  'Physical Aegis': 'mercenary.skill_17015',
+  'Sanctified Strike': 'mercenary.skill_53518',
+  'Herald of Purity': 'mercenary.skill_34212',
+  'Enrage': 'mercenary.skill_62530',
+  'Vaal Cleave': 'mercenary.skill_12723',
+  'Slicing Wind': 'mercenary.skill_19808',
+  'Chain Hook of Trarthus': 'mercenary.skill_7182',
+  'Raise Spectre: Holy Flame Elementals': 'mercenary.skill_47078',
+  'Touch of God': 'mercenary.skill_39732',
+  'Smite': 'mercenary.skill_55917',
+  'Dominating Blow': 'mercenary.skill_43742',
+  'Holy Relic': 'mercenary.skill_40812',
+  'Beacons of Faith': 'mercenary.skill_50866',
+  'Spectral Shield Throw of Trarthus': 'mercenary.skill_41834',
+  'Shield Crush': 'mercenary.skill_21201',
+  'Shield Charge': 'mercenary.skill_22850',
+  'Prismplate': 'mercenary.skill_52494',
+  'Brutal Teachings': 'mercenary.skill_27763',
+  'Shattering Steel': 'mercenary.skill_12729',
+  'Splitting Steel': 'mercenary.skill_28511',
+  'Lancing Steel': 'mercenary.skill_43812',
+  'Call of Steel': 'mercenary.skill_46131',
+  'Whirling Blades': 'mercenary.skill_10823',
+  'Venom Gyre': 'mercenary.skill_59831',
+  'Viper Strike': 'mercenary.skill_22227',
+  'Pestilent Strike': 'mercenary.skill_12262',
+  'Cobra Lash': 'mercenary.skill_16896',
+  'Profane Strike': 'mercenary.skill_36446',
+  'Abyssal Cry': 'mercenary.skill_14992',
+  'Seismic Crush': 'mercenary.skill_17198',
+  'Bloody Warp': 'mercenary.skill_22724',
+  'Blade Vortex': 'mercenary.skill_25718',
+  'Ethereal Knives': 'mercenary.skill_50999',
+  'Aspect of the Spider': 'mercenary.skill_19417',
+  'Clutches of the Damned': 'mercenary.skill_26057',
+  'Bladefall': 'mercenary.skill_37202',
+  'Bladefall of Trarthus': 'mercenary.skill_59477',
+  'Storm Call of Trarthus': 'mercenary.skill_2187',
+  'Tempest Shield': 'mercenary.skill_58855',
+  'Punishment': 'mercenary.skill_32391',
+  'Vaal Molten Strike': 'mercenary.skill_42219',
+  'Molten Strike': 'mercenary.skill_899',
+  'Infernal Blow of Immolation': 'mercenary.skill_17147',
+  'Inflame': 'mercenary.skill_8295',
+  'Flamebolt Strike': 'mercenary.skill_19178',
+  'Static Strike': 'mercenary.skill_24931',
+  'Frost Blades': 'mercenary.skill_22105',
+  'Wild Strike': 'mercenary.skill_40957',
+  'Spectral Helix': 'mercenary.skill_37916',
+  'Herald of Ice': 'mercenary.skill_32807',
+  'Absolution': 'mercenary.skill_15611',
+  "Battlemage's Cry": 'mercenary.skill_37344',
+  'Raise Spectre of Transience': 'mercenary.skill_50349',
+  'Reinforce: Fallen Bishop': 'mercenary.skill_4383',
+  'Reinforce: Fallen Emperor': 'mercenary.skill_61523',
+  'Reinforce: Fallen Osseotitan': 'mercenary.skill_53527',
+  'Ice Shot': 'mercenary.skill_11495',
+  'Vaal Ice Shot': 'mercenary.skill_16381',
+  'Vaal Grace': 'mercenary.skill_58425',
+  'Impenetrable Bastion': 'mercenary.skill_45615',
+  'Frigid Forkshot': 'mercenary.skill_18232',
+  'Icicle Rain': 'mercenary.skill_24409',
+  'Dash': 'mercenary.skill_60723',
+  'Barrage of Volley Fire': 'mercenary.skill_12260',
+  'Haste': 'mercenary.skill_52155',
+  'Mirror Arrow': 'mercenary.skill_65447',
+  'Blink Arrow': 'mercenary.skill_10722',
+  'Frenzy': 'mercenary.skill_58592',
+  'Holy Hammers': 'mercenary.skill_28506',
+  'Holy Strike': 'mercenary.skill_38655',
+  'Conflagration': 'mercenary.skill_21962',
+  'Kinetic Rain of Impact': 'mercenary.skill_32089',
+  'Elemental Hit of Ice': 'mercenary.skill_8708',
+  'Multiple Projectiles': 'mercenary.support_12054',
+  'Greater Multiple Projectiles': 'mercenary.support_49419',
+  'Gilded Caustic Conversion': 'mercenary.support_39101',
+  'Gilded Exposure on Hit': 'mercenary.support_50741',
+  'Melee Splash': 'mercenary.support_40660',
+  'Gilded Extra Targets': 'mercenary.support_58471',
+  'Lesser Chain': 'mercenary.support_14317',
+  'Chain': 'mercenary.support_31052',
+  'Gilded Shield Damage': 'mercenary.support_30406',
+  'Gilded Consecration': 'mercenary.support_10782',
+  'Gilded Volleys': 'mercenary.support_1075',
+  'Lesser Spell Cascade': 'mercenary.support_65120',
+  'Spell Cascade': 'mercenary.support_1751',
+  'Gilded Impale Extraction': 'mercenary.support_52383',
+  'Gilded Additional Pods': 'mercenary.support_20568',
+  'Gilded Faster Cyclone': 'mercenary.support_17178',
+  'Gilded Relic Recovery': 'mercenary.support_44238',
+  'Gilded Maximum Storms': 'mercenary.support_10682',
+  'Gilded Maximum Spikes': 'mercenary.support_9460',
+  'Greater Sacred Wisps': 'mercenary.support_45969',
+  'Sacred Wisps': 'mercenary.support_45969',
+  'Gilded Fortification': 'mercenary.support_60910',
+  'Gilded Heft': 'mercenary.support_3194',
+  'Greater Fork': 'mercenary.support_32052',
+  'Fork': 'mercenary.support_32052',
+  'Lesser Chance to Bleed': 'mercenary.support_42600',
+  'Chance to Bleed': 'mercenary.support_38948',
+  'Greater Chance to Bleed': 'mercenary.support_31439',
+  'Lesser Added Chaos': 'mercenary.support_45284',
+  'Added Chaos': 'mercenary.support_31430',
+  'Greater Added Chaos': 'mercenary.support_11914',
+  'Gilded Onslaught on Cry': 'mercenary.support_52432',
+  'Lesser Raging Cry': 'mercenary.support_49237',
+  'Raging Cry': 'mercenary.support_36496',
+  'Greater Raging Cry': 'mercenary.support_13784',
+  'Lesser Chance to Poison': 'mercenary.support_1864',
+  'Chance to Poison': 'mercenary.support_58384',
+  'Greater Chance to Poison': 'mercenary.support_9585',
+  'Gilded Malediction': 'mercenary.support_48949',
+  'Lesser Faster Casting': 'mercenary.support_43469',
+  'Faster Casting': 'mercenary.support_38851',
+  'Greater Faster Casting': 'mercenary.support_8607',
+  'Knockback': 'mercenary.support_65002',
+  'Gilded Additional Pulses': 'mercenary.support_30722',
+  'Greater Lucky Lightning Damage': 'mercenary.support_24343',
+  'Lucky Lightning Damage': 'mercenary.support_24343',
+  'Lesser Generosity': 'mercenary.support_59349',
+  'Generosity': 'mercenary.support_35435',
+  'Greater Generosity': 'mercenary.support_53367',
+  'Greater Fortify': 'mercenary.support_31664',
+  'Fortify': 'mercenary.support_31664',
+  'Gilded Empowered Link': 'mercenary.support_36350',
+  'Gilded Icecrash Radius': 'mercenary.support_29166',
+  'Lesser More Duration': 'mercenary.support_2602',
+  'More Duration': 'mercenary.support_50222',
+  'Greater More Duration': 'mercenary.support_26568',
+  'Lesser Less Duration': 'mercenary.support_54768',
+  'Less Duration': 'mercenary.support_65114',
+  'Greater Less Duration': 'mercenary.support_61947',
+  'Lesser Swift Affliction': 'mercenary.support_834',
+  'Swift Affliction': 'mercenary.support_64281',
+  'Greater Swift Affliction': 'mercenary.support_65240',
+  'Greater Curse Effect': 'mercenary.support_3263',
+  'Curse Effect': 'mercenary.support_3263',
+  'Lesser Hypothermia': 'mercenary.support_26146',
+  'Hypothermia': 'mercenary.support_38571',
+  'Greater Hypothermia': 'mercenary.support_53145',
+  'Lesser Strike Distance': 'mercenary.support_30389',
+  'Strike Distance': 'mercenary.support_59784',
+  'Greater Strike Distance': 'mercenary.support_812',
+  'Lesser Cooldown Recovery': 'mercenary.support_30881',
+  'Cooldown Recovery': 'mercenary.support_48875',
+  'Greater Cooldown Recovery': 'mercenary.support_10608',
+  'Lesser Cold Penetration': 'mercenary.support_40565',
+  'Cold Penetration': 'mercenary.support_54628',
+  'Greater Cold Penetration': 'mercenary.support_26094',
+  'Lesser Lightning Penetration': 'mercenary.support_37739',
+  'Lightning Penetration': 'mercenary.support_41256',
+  'Greater Lightning Penetration': 'mercenary.support_26815',
+  'Arrow Nova': 'mercenary.support_58429',
+  'Gilded Maximum Explosions': 'mercenary.support_42966',
+  'Gilded Additional Fissures': 'mercenary.support_3609',
+  'Lesser Fire Penetration': 'mercenary.support_46010',
+  'Fire Penetration': 'mercenary.support_62885',
+  'Greater Fire Penetration': 'mercenary.support_54494',
+  'Lesser Ailment Effect': 'mercenary.support_12388',
+  'Ailment Effect': 'mercenary.support_61972',
+  'Greater Ailment Effect': 'mercenary.support_33272',
+  'Lesser Added Cold': 'mercenary.support_13069',
+  'Added Cold': 'mercenary.support_52758',
+  'Greater Added Cold': 'mercenary.support_60094',
+  'Lesser Added Lightning': 'mercenary.support_36665',
+  'Added Lightning': 'mercenary.support_64283',
+  'Greater Added Lightning': 'mercenary.support_40533',
+  'Gilded Elemental Weakness on Hit': 'mercenary.support_3756',
+  'Lesser Elemental Damage with Attacks': 'mercenary.support_59712',
+  'Elemental Damage with Attacks': 'mercenary.support_44886',
+  'Greater Elemental Damage with Attacks': 'mercenary.support_28416',
+  'Lesser Shock Chance': 'mercenary.support_9710',
+  'Shock Chance': 'mercenary.support_64846',
+  'Greater Shock Chance': 'mercenary.support_38046',
+  'Lesser Ignite Chance': 'mercenary.support_52335',
+  'Ignite Chance': 'mercenary.support_50303',
+  'Greater Ignite Chance': 'mercenary.support_10997',
+  'Lesser Freeze Chance': 'mercenary.support_34226',
+  'Freeze Chance': 'mercenary.support_27458',
+  'Greater Freeze Chance': 'mercenary.support_12387',
+  'Brittle Chance': 'mercenary.support_54837',
+  'Lesser Ailment Damage': 'mercenary.support_44527',
+  'Ailment Damage': 'mercenary.support_9607',
+  'Greater Ailment Damage': 'mercenary.support_65362',
+  'Gilded Trauma Duration': 'mercenary.support_21276',
+  'Gilded Astral Totem': 'mercenary.support_41118',
+  'Gilded Ensnare Effect': 'mercenary.support_25565',
+  'Maim': 'mercenary.support_56389',
+  'Lesser Impale Chance': 'mercenary.support_54252',
+  'Impale Chance': 'mercenary.support_11497',
+  'Greater Impale Chance': 'mercenary.support_29720',
+  'Mirage Archer': 'mercenary.support_37727',
+  'Multiple Totems': 'mercenary.support_17097',
+  'Gilded Secondary Shots': 'mercenary.support_18499',
+  'Lesser Rage on Hit': 'mercenary.support_55249',
+  'Rage on Hit': 'mercenary.support_64986',
+  'Greater Rage on Hit': 'mercenary.support_57658',
+  'Gilded Cull': 'mercenary.support_42140',
+  'Lesser Faster Attacks': 'mercenary.support_52447',
+  'Faster Attacks': 'mercenary.support_987',
+  'Greater Faster Attacks': 'mercenary.support_50485',
+  'Lesser Concentrated Effect': 'mercenary.support_42698',
+  'Concentrated Effect': 'mercenary.support_21489',
+  'Greater Concentrated Effect': 'mercenary.support_51806',
+  'Lesser DoT Multiplier': 'mercenary.support_22977',
+  'DoT Multiplier': 'mercenary.support_6927',
+  'Greater DoT Multiplier': 'mercenary.support_37460',
+  'Lesser Ironwood': 'mercenary.support_230',
+  'Ironwood': 'mercenary.support_6667',
+  'Greater Ironwood': 'mercenary.support_1227',
+  'Gilded Hinder Duration': 'mercenary.support_3180',
+  'Gilded Additional Duration': 'mercenary.support_55998',
+  'Gilded Area per Projectile': 'mercenary.support_28387',
+  'Gilded Beam Width': 'mercenary.support_13568',
+  'Lesser Physical as Extra': 'mercenary.support_28037',
+  'Physical as Extra': 'mercenary.support_39342',
+  'Greater Physical as Extra': 'mercenary.support_45050',
+  'Lesser Infused Channelling': 'mercenary.support_59986',
+  'Infused Channelling': 'mercenary.support_34697',
+  'Greater Infused Channelling': 'mercenary.support_63104',
+  'Return': 'mercenary.support_5293',
+  'Lesser Wither on Hit': 'mercenary.support_53673',
+  'Wither on Hit': 'mercenary.support_15235',
+  'Greater Wither on Hit': 'mercenary.support_61510',
+  'Gilded Sphere Frequency': 'mercenary.support_12569',
+  'Maximum Shock Effect': 'mercenary.support_64801',
+  'Lesser Critical Chance': 'mercenary.support_23209',
+  'Critical Chance': 'mercenary.support_61471',
+  'Greater Critical Chance': 'mercenary.support_62220',
+  'Lesser Slower Projectiles': 'mercenary.support_15866',
+  'Slower Projectiles': 'mercenary.support_2210',
+  'Greater Slower Projectiles': 'mercenary.support_44952',
+  'Lesser Faster Projectiles': 'mercenary.support_25199',
+  'Faster Projectiles': 'mercenary.support_57644',
+  'Greater Faster Projectiles': 'mercenary.support_14517',
+  'Physical as Extra Chaos': 'mercenary.support_51009',
+  'Greater Physical as Extra Chaos': 'mercenary.support_58214',
+  'Second Wind': 'mercenary.support_50475',
+  'Gilded Additional Leech': 'mercenary.support_56511',
+  'Gilded Wither Stacks': 'mercenary.support_55952',
+  'Gilded Maximum Stages': 'mercenary.support_48614',
+  'Gilded Damage from Life': 'mercenary.support_9300',
+  'Lesser Brutality': 'mercenary.support_55807',
+  'Brutality': 'mercenary.support_64271',
+  'Greater Brutality': 'mercenary.support_59345',
+  'Gilded Clone Speed': 'mercenary.support_56315',
+  'Lesser Elemental Focus': 'mercenary.support_30359',
+  'Elemental Focus': 'mercenary.support_37388',
+  'Greater Elemental Focus': 'mercenary.support_31600',
+  'Lesser Pierce': 'mercenary.support_6040',
+  'Pierce': 'mercenary.support_56267',
+  'Greater Pierce': 'mercenary.support_27970',
+  'Lesser Critical Damage': 'mercenary.support_30688',
+  'Critical Damage': 'mercenary.support_32189',
+  'Greater Critical Damage': 'mercenary.support_55659',
+  'Lesser Minion Damage': 'mercenary.support_8821',
+  'Minion Damage': 'mercenary.support_28579',
+  'Greater Minion Damage': 'mercenary.support_52472',
+  'Lesser Warcry Speed': 'mercenary.support_55470',
+  'Warcry Speed': 'mercenary.support_47477',
+  'Greater Warcry Speed': 'mercenary.support_52142',
+  'Lesser Chaos Penetration': 'mercenary.support_25880',
+  'Chaos Penetration': 'mercenary.support_33975',
+  'Greater Chaos Penetration': 'mercenary.support_39984',
+  'Gilded Cascade Count': 'mercenary.support_32431',
+  'Gilded Voltaxic Conversion': 'mercenary.support_17946',
+  'Lesser Minion Life': 'mercenary.support_23582',
+  'Minion Life': 'mercenary.support_20579',
+  'Greater Minion Life': 'mercenary.support_31863',
+  'Multistrike': 'mercenary.support_62638',
+  'Greater Multistrike': 'mercenary.support_25973',
+  'Lesser Added Fire': 'mercenary.support_42977',
+  'Added Fire': 'mercenary.support_45439',
+  'Greater Added Fire': 'mercenary.support_6121',
+  'Lesser Melee Physical Damage': 'mercenary.support_64940',
+  'Melee Physical Damage': 'mercenary.support_53516',
+  'Greater Melee Physical Damage': 'mercenary.support_63342',
+  'Combustion': 'mercenary.support_58581',
+  'Minion Caustic Death': 'mercenary.support_13016',
+  'Multiple Traps': 'mercenary.support_2555',
+  'Arcane Traps': 'mercenary.support_14557',
+  'Lesser Leech': 'mercenary.support_32130',
+  'Leech': 'mercenary.support_3240',
+  'Greater Leech': 'mercenary.support_41756',
+  'Lesser Throwing Speed': 'mercenary.support_32260',
+  'Throwing Speed': 'mercenary.support_3465',
+  'Greater Throwing Speed': 'mercenary.support_58938',
+  'Lesser Trap and Mine Damage': 'mercenary.support_49954',
+  'Trap and Mine Damage': 'mercenary.support_31171',
+  'Greater Trap and Mine Damage': 'mercenary.support_59079',
+  'Charged Traps': 'mercenary.support_5081',
+  'Lesser Trigger Radius': 'mercenary.support_40446',
+  'Trigger Radius': 'mercenary.support_819',
+  'Greater Trigger Radius': 'mercenary.support_54156',
+  'Gilded Purified Ground': 'mercenary.support_56144',
+  'Lesser Mitigation Ignore': 'mercenary.support_16261',
+  'Mitigation Ignore': 'mercenary.support_4351',
+  'Greater Mitigation Ignore': 'mercenary.support_33557',
+  'Gilded Ash': 'mercenary.support_37275',
+  'Gilded Stun Duration': 'mercenary.support_26618',
+  'Gilded Frenzy': 'mercenary.support_48738',
+  'Gilded Increased Angle': 'mercenary.support_39050',
+  'Gilded Physical Damage Reduction': 'mercenary.support_26792',
+  'Fist of War': 'mercenary.support_12347',
+  'Gilded Power Charge on Critical Strike': 'mercenary.support_6109',
+  'Gilded Crush': 'mercenary.support_39307',
+  'Lesser Pulverise': 'mercenary.support_35729',
+  'Pulverise': 'mercenary.support_64717',
+  'Greater Pulverise': 'mercenary.support_64416',
+  'Lesser Increased Area of Effect': 'mercenary.support_22670',
+  'Increased Area of Effect': 'mercenary.support_53342',
+  'Greater Area of Effect': 'mercenary.support_19113',
+  'Area of Effect': 'mercenary.support_19113',
+  'Lesser Excommunicate': 'mercenary.support_29922',
+  'Excommunicate': 'mercenary.support_45433',
+  'Greater Excommunicate': 'mercenary.support_8617',
+  'Hallow': 'mercenary.support_56233',
+  'Gilded Nova': 'mercenary.support_42155',
+  'Gilded Jolt': 'mercenary.support_40212',
+  'Gilded Voltage': 'mercenary.support_22587',
+  'Gilded Chain Distance': 'mercenary.support_31571',
+  'Gilded Inhibitor': 'mercenary.support_21678',
+  'Gilded Freezer Burn': 'mercenary.support_17213',
+  'Gilded Archers': 'mercenary.support_52378',
+  'Gilded Electrocuting': 'mercenary.support_26713',
+  'Gilded Scorch Chance': 'mercenary.support_19004',
+  'Gilded Searing Agony': 'mercenary.support_50273',
+  'Gilded Devotion': 'mercenary.support_40676',
+  'Gilded Hopelessness': 'mercenary.support_38317',
+  'Gilded Reactor': 'mercenary.support_25885',
+  'Gilded Conflagrant': 'mercenary.support_59468',
+  'Gilded Divine Shield': 'mercenary.support_4032',
+  'Gilded Snaking': 'mercenary.support_4006',
+  'Gilded Blasting': 'mercenary.support_49189',
+  'Gilded Pierce': 'mercenary.support_10482',
+  'Gilded Uncertainty': 'mercenary.support_11052',
+  'Gilded Lumbering Dead': 'mercenary.support_29562',
+  'Gilded Grasp': 'mercenary.support_32361',
+  'Gilded Totemic Onslaught': 'mercenary.support_25001',
+  'Gilded Scattershot': 'mercenary.support_60983',
+  'Gilded Bitterwound': 'mercenary.support_51944',
+  'Gilded Molten Eruption': 'mercenary.support_2205',
+  'Gilded Inversion': 'mercenary.support_62171',
+  'Gilded Extra Armaments': 'mercenary.support_8720',
+  // TODO: Not found in mercenaries.json
+  'Lesser Multiple Projectiles': 'TODO_mercenary_support_lesser_multiple_projectiles',
+  'Returning Projectiles': 'TODO_mercenary_support_returning_projectiles',
+};
+
+    // --- Parser ---
+    const ACTIVE_SKILLS = new Set(Object.keys(SKILL_STAT_MAP).filter(k => SKILL_STAT_MAP[k].includes('mercenary.skill_')));
+    const SUPPORT_SKILLS = new Set(Object.keys(SKILL_STAT_MAP).filter(k => SKILL_STAT_MAP[k].includes('mercenary.support_')));
+
+    function parseWarrantText(text) {
+      const nameMatch = text.match(/Mercenary Warrant\s*--------\s*(.+?)\s*--------/);
+      const buildMatch = text.match(/Build:\s*(.+?)\n/);
+      const levelMatch = text.match(/Mercenary Level:\s*(\d+)/);
+
+      const name = nameMatch ? nameMatch[1].trim() : 'Unknown';
+      const build = buildMatch ? buildMatch[1].trim() : 'Unknown';
+      const level = levelMatch ? parseInt(levelMatch[1], 10) : 0;
+
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      const actives = [];
+      const supports = [];
+      let lastActive = null;
+
+      for (const line of lines) {
+        if (ACTIVE_SKILLS.has(line)) {
+          lastActive = line;
+          actives.push(line);
+        } else if (SUPPORT_SKILLS.has(line)) {
+          supports.push(line);
+        } else {
+          const supportMatch = line.match(/^(.+?)\s*\(Tier:\s*\d+\)/);
+          if (supportMatch) {
+            const baseName = supportMatch[1].trim();
+            if (SUPPORT_SKILLS.has(baseName)) {
+              supports.push(baseName);
+              lastActive = null;
+            }
+          }
+        }
+      }
+
+      return { name, build, level, actives, supports };
+    }
+
+    // --- Trade URL Generator ---
+    function generateTradeUrl(parsed) {
+      const allSkills = [...parsed.actives, ...parsed.supports];
+      const filters = allSkills
+        .map(skill => {
+          const statId = SKILL_STAT_MAP[skill];
+          if (!statId || statId.startsWith('TODO_')) return null;
+          return { id: statId, value: { min: 1 }, condition: 'or' };
+        })
+        .filter(Boolean);
+
+      if (filters.length === 0) return '';
+
+      const payload = {
+        query: {
+          status: { option: 'online' },
+          stats: [{ type: 'and', filters: [{ type: 'or', filters }] }]
+        },
+        sort: { price: 'asc' }
+      };
+
+      return 'https://www.pathofexile.com/trade/search/' + LEAGUE + '?q=' + encodeURIComponent(JSON.stringify(payload));
+    }
+
+    // --- Presets ---
+    const PRESETS = [
+      {
+        name: 'Kineticist &mdash; BiS Clear Merc',
+        role: 'Map Clearing',
+        note: 'Best-in-slot for map clearing. Avoid Kinetic Bolt &mdash; it breaks the AI.',
+        skills: ['Kinetic Blast of Clustering', 'Multiple Projectiles', 'Haste', 'Inspiring Cry']
+      },
+      {
+        name: 'Manyshot &mdash; Clear / Single Target',
+        role: 'Hybrid',
+        note: 'Strong clear and single-target. Avoid Icicle Rain &mdash; it interrupts Vaal Ice Shot.',
+        skills: ['Ice Shot', 'Vaal Ice Shot', 'Multiple Projectiles', 'Elemental Damage with Attacks', 'Cooldown Recovery', 'Grace', 'Hatred', 'Frost Bomb']
+      },
+      {
+        name: 'Blade Ambusher &mdash; Bossing',
+        role: 'Single Target',
+        note: 'Trap-based boss killer with high single-target damage.',
+        skills: ['Spectral Helix of Trarthus', 'Multiple Traps', 'Trap and Mine Damage', 'Slower Projectiles', 'Grace', 'Summon Skitterbots']
+      },
+      {
+        name: 'Combatant &mdash; All-Rounder',
+        role: 'Starter / General',
+        note: 'Good starter merc. Scales well with armor stacking late game.',
+        skills: ['Static Strike', 'Frost Blades', 'Elemental Damage with Attacks', 'More Duration', 'Chain', 'Wrath', 'Purity of Ice']
+      }
+    ];
+
+    // --- UI ---
+    const warrantInput = document.getElementById('warrantInput');
+    const parsedSection = document.getElementById('parsedSection');
+    const errorSection = document.getElementById('errorSection');
+    const metaBadges = document.getElementById('metaBadges');
+    const skillBadges = document.getElementById('skillBadges');
+    const supportBadges = document.getElementById('supportBadges');
+    const tradeBtn = document.getElementById('tradeBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const copyFeedback = document.getElementById('copyFeedback');
+    const clearBtn = document.getElementById('clearBtn');
+    const presetsList = document.getElementById('presetsList');
+
+    let currentUrl = '';
+
+    function renderParsed(parsed) {
+      if (!parsed || parsed.actives.length === 0) {
+        parsedSection.classList.add('hidden');
+        if (warrantInput.value.trim().length > 20) {
+          errorSection.classList.remove('hidden');
+        }
+        return;
+      }
+
+      errorSection.classList.add('hidden');
+      parsedSection.classList.remove('hidden');
+
+      metaBadges.innerHTML = '';
+      if (parsed.name !== 'Unknown') {
+        metaBadges.innerHTML += '<span class="badge" style="color: #fbbf24;">' + escapeHtml(parsed.name) + '</span>';
+      }
+      if (parsed.build !== 'Unknown') {
+        metaBadges.innerHTML += '<span class="badge" style="color: #fdba74;">Build: ' + escapeHtml(parsed.build) + '</span>';
+      }
+      if (parsed.level > 0) {
+        metaBadges.innerHTML += '<span class="badge" style="color: #86efac;">Level ' + parsed.level + '</span>';
+      }
+
+      skillBadges.innerHTML = parsed.actives.map(s => '<span class="badge">' + escapeHtml(s) + '</span>').join('');
+      supportBadges.innerHTML = parsed.supports.map(s => '<span class="badge badge-support">' + escapeHtml(s) + '</span>').join('');
+
+      currentUrl = generateTradeUrl(parsed);
+      tradeBtn.style.display = currentUrl ? '' : 'none';
+      copyBtn.style.display = currentUrl ? '' : 'none';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    warrantInput.addEventListener('input', () => {
+      const parsed = parseWarrantText(warrantInput.value);
+      renderParsed(parsed);
+    });
+
+    warrantInput.addEventListener('paste', () => {
+      setTimeout(() => {
+        const parsed = parseWarrantText(warrantInput.value);
+        renderParsed(parsed);
+      }, 100);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      warrantInput.value = '';
+      currentUrl = '';
+      parsedSection.classList.add('hidden');
+      errorSection.classList.add('hidden');
+      warrantInput.focus();
+    });
+
+    tradeBtn.addEventListener('click', () => {
+      if (currentUrl) window.open(currentUrl, '_blank');
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (currentUrl) {
+        navigator.clipboard.writeText(currentUrl).then(() => {
+          copyFeedback.classList.remove('hidden');
+          setTimeout(() => copyFeedback.classList.add('hidden'), 2000);
+        });
+      }
+    });
+
+    // Auto-focus on load
+    window.addEventListener('load', () => warrantInput.focus());
+
+    // Render presets
+    function renderPresets() {
+      presetsList.innerHTML = '';
+      for (const preset of PRESETS) {
+        const card = document.createElement('div');
+        card.className = 'bg-zinc-900/50 border border-zinc-800 rounded-md p-3 space-y-2';
+
+        const filters = preset.skills
+          .map(skill => {
+            const statId = SKILL_STAT_MAP[skill];
+            if (!statId || statId.startsWith('TODO_')) return null;
+            return { id: statId, value: { min: 1 }, condition: 'or' };
+          })
+          .filter(Boolean);
+
+        let presetUrl = '';
+        if (filters.length > 0) {
+          const payload = {
+            query: {
+              status: { option: 'online' },
+              stats: [{ type: 'and', filters: [{ type: 'or', filters }] }]
+            },
+            sort: { price: 'asc' }
+          };
+          presetUrl = 'https://www.pathofexile.com/trade/search/' + LEAGUE + '?q=' + encodeURIComponent(JSON.stringify(payload));
+        }
+
+        const roleColors = {
+          'Map Clearing': 'bg-green-900/40 text-green-400 border-green-800/50',
+          'Hybrid': 'bg-blue-900/40 text-blue-400 border-blue-800/50',
+          'Single Target': 'bg-red-900/40 text-red-400 border-red-800/50',
+          'Starter / General': 'bg-amber-900/40 text-amber-400 border-amber-800/50'
+        };
+
+        card.innerHTML = '<div class="flex items-start justify-between gap-2">' +
+          '<div>' +
+          '<h3 class="font-semibold text-sm text-zinc-100">' + escapeHtml(preset.name) + '</h3>' +
+          '<span class="inline-block text-xs px-1.5 py-0.5 rounded border ' + (roleColors[preset.role] || 'bg-zinc-800 text-zinc-400 border-zinc-700') + '">' + escapeHtml(preset.role) + '</span>' +
+          '</div>' +
+          '</div>' +
+          '<p class="text-xs text-zinc-500">' + escapeHtml(preset.note) + '</p>' +
+          '<div class="flex flex-wrap gap-1">' +
+          preset.skills.map(s => '<span class="badge text-[10px] py-0.5">' + escapeHtml(s) + '</span>').join('') +
+          '</div>' +
+          (presetUrl ? '<a href="' + presetUrl + '" target="_blank" rel="noopener" class="btn-primary text-xs py-1.5 px-3">' +
+            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>' +
+            'Search Trade' +
+          '</a>' : '<span class="text-xs text-zinc-600 italic">Trade link unavailable (missing stat IDs)</span>') +
+          '</div>';
+
+        presetsList.appendChild(card);
+      }
+    }
+
+    renderPresets();
+  </script>
+</body>
+</html>
