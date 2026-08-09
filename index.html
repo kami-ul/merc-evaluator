@@ -43,11 +43,11 @@
     <!-- Header -->
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-amber-400">Mercenary Warrant Evaluator</h1>
+        <h1 class="text-2xl font-bold text-amber-400">PoE Mercenary Warrant Evaluator</h1>
         <p class="text-sm text-zinc-500 mt-1">Hover over a Mercenary Warrant in-game, press <kbd class="inline-block px-1.5 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300">Ctrl</kbd> + <kbd class="inline-block px-1.5 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-300">C</kbd> and paste the text below.</p>
       </div>
-      <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" rel="noopener" class="text-sm text-amber-500/80 hover:text-amber-400 underline transition-colors">
-        CptLance Merc Guide &rarr;
+      <a href="https://kami-ul.github.io/cluster-resolver/" target="_blank" rel="noopener" class="text-sm text-amber-500/80 hover:text-amber-400 underline transition-colors">
+        Cluster Resolver &rarr;
       </a>
     </header>
 
@@ -69,12 +69,12 @@
           <div id="metaBadges" class="flex flex-wrap gap-2"></div>
           <div class="border-t border-zinc-800 pt-3">
             <p class="text-xs text-zinc-500 mb-2 font-medium uppercase tracking-wider">Skill Links</p>
-            <div id="skillGroups" class="space-y-2"></div>
+            <div id="skillGroups" class="space-y-3"></div>
           </div>
           <div class="flex flex-wrap gap-2 pt-2">
             <button id="tradeBtn" class="btn-primary">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-              Open in PoE Trade
+              Search Trade
             </button>
             <button id="copyBtn" class="btn-secondary">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -92,14 +92,14 @@
       <!-- Popular Presets -->
       <section class="card space-y-4">
         <h2 class="text-lg font-semibold text-zinc-100">Popular Presets</h2>
-        <p class="text-xs text-zinc-500">Suggestions from <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" class="text-amber-500/80 hover:text-amber-400 underline">Luminary build</a> by Cpt Lance</p>
+        <p class="text-xs text-zinc-500">Suggestions from <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" class="text-amber-500/80 hover:text-amber-400 underline">Luminary build</a> by CaptainLance9</p>
         <div id="presetsList" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
       </section>
     </div>
 
     <!-- Footer -->
     <footer class="text-center text-xs text-zinc-600 pt-4">
-      PoE 1 Mercenary Evaluator &middot; Client-side only, no data collected
+      PoE Mercenary Warrant Evaluator is not affiliated with or endorsed by Grinding Gear Games.
     </footer>
   </div>
 
@@ -705,21 +705,33 @@
 
     // --- Trade URL Generator ---
     function generateTradeUrl(parsed) {
-      const allSkills = [...parsed.actives, ...parsed.supports];
-      const filters = allSkills
-        .map(skill => {
-          const statId = SKILL_STAT_MAP[skill];
-          if (!statId || statId.startsWith('TODO_')) return null;
-          return { id: statId, value: { min: 1 } };
-        })
-        .filter(Boolean);
+      const groups = parsed.groups || [];
+      const statGroups = [];
 
-      if (filters.length === 0) return '';
+      for (const g of groups) {
+        const filters = [];
+        const statId = SKILL_STAT_MAP[g.active];
+        if (statId && !statId.startsWith('TODO_')) {
+          filters.push({ id: statId, value: { min: 1 } });
+        }
+        for (const l of (g.linked || [])) {
+          const name = typeof l === 'string' ? l : l.name;
+          const statId2 = SKILL_STAT_MAP[name];
+          if (statId2 && !statId2.startsWith('TODO_')) {
+            filters.push({ id: statId2, value: { min: 1 } });
+          }
+        }
+        if (filters.length > 0) {
+          statGroups.push({ type: 'and', filters });
+        }
+      }
+
+      if (statGroups.length === 0) return '';
 
       const payload = {
         query: {
           status: { option: 'online' },
-          stats: [{ type: 'and', filters }]
+          stats: statGroups
         },
         sort: { price: 'asc' }
       };
@@ -879,25 +891,30 @@
         const card = document.createElement('div');
         card.className = 'bg-zinc-900/50 border border-zinc-800 rounded-md p-3 space-y-2';
 
-        const allSkills = [];
+        const statGroups = [];
         for (const g of preset.groups) {
-          allSkills.push(g.active);
-          for (const l of g.linked) allSkills.push(l);
+          const filters = [];
+          const statId = SKILL_STAT_MAP[g.active];
+          if (statId && !statId.startsWith('TODO_')) {
+            filters.push({ id: statId, value: { min: 1 } });
+          }
+          for (const l of g.linked) {
+            const statId2 = SKILL_STAT_MAP[l];
+            if (statId2 && !statId2.startsWith('TODO_')) {
+              filters.push({ id: statId2, value: { min: 1 } });
+            }
+          }
+          if (filters.length > 0) {
+            statGroups.push({ type: 'and', filters });
+          }
         }
-        const filters = allSkills
-          .map(skill => {
-            const statId = SKILL_STAT_MAP[skill];
-            if (!statId || statId.startsWith('TODO_')) return null;
-            return { id: statId, value: { min: 1 }, condition: 'or' };
-          })
-          .filter(Boolean);
 
         let presetUrl = '';
-        if (filters.length > 0) {
+        if (statGroups.length > 0) {
           const payload = {
             query: {
               status: { option: 'online' },
-              stats: [{ type: 'and', filters: [{ type: 'or', filters }] }]
+              stats: statGroups
             },
             sort: { price: 'asc' }
           };
