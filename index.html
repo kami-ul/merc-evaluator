@@ -746,7 +746,7 @@
         role: 'Map Clearing',
         note: 'Best-in-slot for map clearing. Avoid Kinetic Bolt &mdash; it breaks the AI.',
         groups: [
-          { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles'] },
+          { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles', 'Return'] },
           { active: 'Haste', linked: [] },
           { active: 'Inspiring Cry', linked: [] }
         ]
@@ -756,9 +756,9 @@
         role: 'Hybrid',
         note: 'Strong clear and single-target. Avoid Icicle Rain &mdash; it interrupts Vaal Ice Shot.',
         groups: [
-          { active: 'Ice Shot', linked: ['Multiple Projectiles', 'Elemental Damage with Attacks'] },
-          { active: 'Vaal Ice Shot', linked: [] },
-          { active: 'Frost Bomb', linked: ['Cooldown Recovery'] },
+          { active: 'Ice Shot', linked: ['Multiple Projectiles', 'Return', 'Elemental Damage with Attacks'] },
+          { active: 'Vaal Ice Shot', linked: ['Return', 'Elemental Damage with Attacks', 'Cooldown Recovery'] },
+          { active: 'Frost Bomb', linked: [] },
           { active: 'Grace', linked: [] },
           { active: 'Hatred', linked: [] }
         ]
@@ -779,7 +779,7 @@
         note: 'Good starter merc. Scales well with armor stacking late game.',
         groups: [
           { active: 'Static Strike', linked: ['Elemental Damage with Attacks', 'More Duration', 'Chain'] },
-          { active: 'Frost Blades', linked: [] },
+          { active: 'Frost Blades', linked: ['Return', 'Elemental Damage with Attacks', 'Chain'] },
           { active: 'Wrath', linked: [] },
           { active: 'Purity of Ice', linked: [] }
         ]
