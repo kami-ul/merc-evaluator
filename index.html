@@ -99,7 +99,8 @@
 
     <!-- Footer -->
     <footer class="text-center text-xs text-zinc-600 pt-4">
-      PoE Mercenary Warrant Evaluator is not affiliated with or endorsed by Grinding Gear Games.
+      PoE Mercenary Warrant Evaluator is not affiliated with or endorsed by Grinding Gear Games.<br />
+      Built with <a href="https://opencode.ai/" class="underline hover:text-[#af9767] transition-colors">opencode</a> and <a href="https://github.com/ggml-org/llama.cpp" class="underline hover:text-[#af9767] transition-colors">llama.cpp</a>
     </footer>
   </div>
 
@@ -730,7 +731,6 @@
 
       const payload = {
         query: {
-          status: { option: 'online' },
           stats: statGroups
         },
         sort: { price: 'asc' }
@@ -742,7 +742,7 @@
     // --- Presets ---
     const PRESETS = [
       {
-        name: 'Kineticist \u2014 BiS Clear Merc',
+        name: 'Kineticist - BiS Clear Merc',
         role: 'Map Clearing',
         note: 'Best-in-slot for map clearing. Avoid Kinetic Bolt &mdash; it breaks the AI.',
         groups: [
@@ -752,7 +752,7 @@
         ]
       },
       {
-        name: 'Manyshot \u2014 Clear / Single Target',
+        name: 'Manyshot - Clear / Single Target',
         role: 'Hybrid',
         note: 'Strong clear and single-target. Avoid Icicle Rain &mdash; it interrupts Vaal Ice Shot.',
         groups: [
@@ -764,7 +764,7 @@
         ]
       },
       {
-        name: 'Blade Ambusher &mdash; Bossing',
+        name: 'Blade Ambusher - Bossing',
         role: 'Single Target',
         note: 'Trap-based boss killer with high single-target damage.',
         groups: [
@@ -774,7 +774,7 @@
         ]
       },
       {
-        name: 'Combatant &mdash; All-Rounder',
+        name: 'Combatant - All-Rounder',
         role: 'Starter / General',
         note: 'Good starter merc. Scales well with armor stacking late game.',
         groups: [
@@ -914,7 +914,6 @@
         if (statGroups.length > 0) {
           const payload = {
             query: {
-              status: { option: 'online' },
               stats: statGroups
             },
             sort: { price: 'asc' }

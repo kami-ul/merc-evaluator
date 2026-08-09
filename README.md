@@ -1,6 +1,6 @@
 # PoE Mercenary Warrant Evaluator
 
-Instantly evaluate Path of Exile 1 Mercenary Warrants and search the trade platform for matching mercenaries.
+Price checking mercenaries in PoE is tedious. This app helps you to instantly evaluate Mercenary Warrants and search the trade platform for matching mercenaries.
 
 ## Features
 
@@ -26,3 +26,11 @@ Sourced from [Cpt Lance's Luminary build](https://mobalytics.gg/poe/builds/capta
 ## Tech
 
 Single-file static app. No build step, no server, no dependencies beyond Tailwind CDN. Hosted on GitHub Pages.
+
+## Disclaimer
+
+This project is an independent fan-made tool and is not affiliated with, authorized, maintained, sponsored, or endorsed by Grinding Gear Games or Path of Exile. 
+
+Path of Exile and Grinding Gear Games are trademarks or registered trademarks of Grinding Gear Games in New Zealand and/or other countries. All game assets, imagery, and related materials are property of Grinding Gear Games.
+
+Built with opencode powered llama.cpp and Qwen 3.6
