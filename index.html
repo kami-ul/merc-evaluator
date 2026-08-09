@@ -650,7 +650,7 @@
   'Gilded Extra Armaments': 'mercenary.support_8720',
   // TODO: Not found in mercenaries.json
   'Lesser Multiple Projectiles': 'TODO_mercenary_support_lesser_multiple_projectiles',
-  'Returning Projectiles': 'TODO_mercenary_support_returning_projectiles',
+
 };
 
     // --- Parser ---
@@ -746,7 +746,8 @@
         role: 'Map Clearing',
         note: 'Best-in-slot for map clearing. Avoid Kinetic Bolt &mdash; it breaks the AI.',
         groups: [
-          { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles', 'Haste'] },
+          { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles'] },
+          { active: 'Haste', linked: [] },
           { active: 'Inspiring Cry', linked: [] }
         ]
       },
