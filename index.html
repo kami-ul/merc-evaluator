@@ -731,6 +731,7 @@
 
       const payload = {
         query: {
+          status: { option: 'instantbuy' },
           stats: statGroups
         },
         sort: { price: 'asc' }
@@ -914,6 +915,7 @@
         if (statGroups.length > 0) {
           const payload = {
             query: {
+              status: { option: 'instantbuy' },
               stats: statGroups
             },
             sort: { price: 'asc' }
