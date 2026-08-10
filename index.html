@@ -745,24 +745,26 @@
       {
         name: 'Kineticist - BiS Clear Merc',
         role: 'Map Clearing',
-        note: 'Best-in-slot for map clearing. Avoid Kinetic Bolt &mdash; it breaks the AI.',
+        note: 'Best-in-slot for map clearing.',
         groups: [
           { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles', 'Return'] },
           { active: 'Haste', linked: [] },
           { active: 'Inspiring Cry', linked: [] }
-        ]
+        ],
+        avoid: ['Kinetic Bolt']
       },
       {
         name: 'Manyshot - Clear / Single Target',
         role: 'Hybrid',
-        note: 'Strong clear and single-target. Avoid Icicle Rain &mdash; it interrupts Vaal Ice Shot.',
+        note: 'Strong clear and single-target.',
         groups: [
           { active: 'Ice Shot', linked: ['Multiple Projectiles', 'Return', 'Elemental Damage with Attacks'] },
           { active: 'Vaal Ice Shot', linked: ['Return', 'Elemental Damage with Attacks', 'Cooldown Recovery'] },
           { active: 'Frost Bomb', linked: [] },
           { active: 'Grace', linked: [] },
           { active: 'Hatred', linked: [] }
-        ]
+        ],
+        avoid: ['Icicle Rain']
       },
       {
         name: 'Blade Ambusher - Bossing',
@@ -911,6 +913,19 @@
           }
         }
 
+        if (preset.avoid && preset.avoid.length > 0) {
+          const notFilters = [];
+          for (const a of preset.avoid) {
+            const statId = SKILL_STAT_MAP[a];
+            if (statId && !statId.startsWith('TODO_')) {
+              notFilters.push({ id: statId, value: { min: 1 } });
+            }
+          }
+          if (notFilters.length > 0) {
+            statGroups.push({ type: 'not', filters: notFilters });
+          }
+        }
+
         let presetUrl = '';
         if (statGroups.length > 0) {
           const payload = {
@@ -936,6 +951,14 @@
             '<span class="badge text-[10px] py-0.5">' + escapeHtml(g.active) + '</span>';
           for (const l of g.linked) {
             groupsHtml += ' <span class="badge badge-support text-[10px] py-0.5">' + escapeHtml(l) + '</span>';
+          }
+          groupsHtml += '</div>';
+        }
+        if (preset.avoid && preset.avoid.length > 0) {
+          groupsHtml += '<div class="flex flex-wrap items-center gap-1 pt-1 border-t border-zinc-800/60">' +
+            '<span class="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">Avoid</span>';
+          for (const a of preset.avoid) {
+            groupsHtml += ' <span class="badge text-[10px] py-0.5" style="color: #f87171; border-color: rgba(248,113,113,0.3);">' + escapeHtml(a) + '</span>';
           }
           groupsHtml += '</div>';
         }
