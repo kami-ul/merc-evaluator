@@ -713,17 +713,17 @@
         const filters = [];
         const statId = SKILL_STAT_MAP[g.active];
         if (statId && !statId.startsWith('TODO_')) {
-          filters.push({ id: statId, value: { min: 1 } });
+          filters.push({ id: statId });
         }
         for (const l of (g.linked || [])) {
           const name = typeof l === 'string' ? l : l.name;
           const statId2 = SKILL_STAT_MAP[name];
           if (statId2 && !statId2.startsWith('TODO_')) {
-            filters.push({ id: statId2, value: { min: 1 } });
+            filters.push({ id: statId2 });
           }
         }
         if (filters.length > 0) {
-          statGroups.push({ type: 'and', filters });
+          statGroups.push({ type: 'mercenary', filters });
         }
       }
 
@@ -731,7 +731,7 @@
 
       const payload = {
         query: {
-          status: { option: 'instantbuy' },
+          status: { option: 'securable' },
           stats: statGroups
         },
         sort: { price: 'asc' }
@@ -900,16 +900,16 @@
           const filters = [];
           const statId = SKILL_STAT_MAP[g.active];
           if (statId && !statId.startsWith('TODO_')) {
-            filters.push({ id: statId, value: { min: 1 } });
+            filters.push({ id: statId });
           }
           for (const l of g.linked) {
             const statId2 = SKILL_STAT_MAP[l];
             if (statId2 && !statId2.startsWith('TODO_')) {
-              filters.push({ id: statId2, value: { min: 1 } });
+              filters.push({ id: statId2 });
             }
           }
           if (filters.length > 0) {
-            statGroups.push({ type: 'and', filters });
+            statGroups.push({ type: 'mercenary', filters });
           }
         }
 
@@ -918,7 +918,7 @@
           for (const a of preset.avoid) {
             const statId = SKILL_STAT_MAP[a];
             if (statId && !statId.startsWith('TODO_')) {
-              notFilters.push({ id: statId, value: { min: 1 } });
+              notFilters.push({ id: statId });
             }
           }
           if (notFilters.length > 0) {
@@ -930,7 +930,7 @@
         if (statGroups.length > 0) {
           const payload = {
             query: {
-              status: { option: 'instantbuy' },
+              status: { option: 'securable' },
               stats: statGroups
             },
             sort: { price: 'asc' }
