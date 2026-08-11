@@ -92,7 +92,6 @@
       <!-- Popular Presets -->
       <section class="card space-y-4">
         <h2 class="text-lg font-semibold text-zinc-100">Popular Presets</h2>
-        <p class="text-xs text-zinc-500">Suggestions from <a href="https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot" target="_blank" class="text-amber-500/80 hover:text-amber-400 underline">Luminary build</a> by CaptainLance9</p>
         <div id="presetsList" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
       </section>
     </div>
@@ -740,51 +739,171 @@
       return 'https://www.pathofexile.com/trade/search/' + LEAGUE + '?q=' + encodeURIComponent(JSON.stringify(payload));
     }
 
-    // --- Presets ---
-    const PRESETS = [
+    // --- Presets (grouped by creator) ---
+    const PRESET_GROUPS = [
       {
-        name: 'Kineticist - BiS Clear Merc',
-        role: 'Map Clearing',
-        note: 'Best-in-slot for map clearing.',
-        groups: [
-          { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles', 'Return'] },
-          { active: 'Haste', linked: [] },
-          { active: 'Inspiring Cry', linked: [] }
-        ],
-        avoid: ['Kinetic Bolt']
-      },
-      {
-        name: 'Manyshot - Clear / Single Target',
-        role: 'Hybrid',
-        note: 'Strong clear and single-target.',
-        groups: [
-          { active: 'Ice Shot', linked: ['Multiple Projectiles', 'Return', 'Elemental Damage with Attacks'] },
-          { active: 'Vaal Ice Shot', linked: ['Return', 'Elemental Damage with Attacks', 'Cooldown Recovery'] },
-          { active: 'Frost Bomb', linked: [] },
-          { active: 'Grace', linked: [] },
-          { active: 'Hatred', linked: [] }
-        ],
-        avoid: ['Icicle Rain']
-      },
-      {
-        name: 'Blade Ambusher - Bossing',
-        role: 'Single Target',
-        note: 'Trap-based boss killer with high single-target damage.',
-        groups: [
-          { active: 'Spectral Helix of Trarthus', linked: ['Multiple Traps', 'Trap and Mine Damage', 'Slower Projectiles'] },
-          { active: 'Grace', linked: [] },
-          { active: 'Summon Skitterbots', linked: [] }
+        creator: 'Cpt Lance',
+        source: 'CaptainLance9 on Mobalytics',
+        sourceUrl: 'https://mobalytics.gg/poe/builds/captainlance9-luminary-merc-bot',
+        presets: [
+          {
+            name: 'Kineticist - BiS Clear Merc',
+            role: 'Map Clearing',
+            note: 'Best-in-slot for map clearing.',
+            groups: [
+              { active: 'Kinetic Blast of Clustering', linked: ['Multiple Projectiles', 'Return'] },
+              { active: 'Haste', linked: [] },
+              { active: 'Inspiring Cry', linked: [] }
+            ],
+            avoid: ['Kinetic Bolt']
+          },
+          {
+            name: 'Manyshot - Clear / Single Target',
+            role: 'Hybrid',
+            note: 'Strong clear and single-target.',
+            groups: [
+              { active: 'Ice Shot', linked: ['Multiple Projectiles', 'Return', 'Elemental Damage with Attacks'] },
+              { active: 'Vaal Ice Shot', linked: ['Return', 'Elemental Damage with Attacks', 'Cooldown Recovery'] },
+              { active: 'Frost Bomb', linked: [] },
+              { active: 'Grace', linked: [] },
+              { active: 'Hatred', linked: [] }
+            ],
+            avoid: ['Icicle Rain']
+          },
+          {
+            name: 'Blade Ambusher - Bossing',
+            role: 'Single Target',
+            note: 'Trap-based boss killer with high single-target damage.',
+            groups: [
+              { active: 'Spectral Helix of Trarthus', linked: ['Multiple Traps', 'Trap and Mine Damage', 'Slower Projectiles'] },
+              { active: 'Grace', linked: [] },
+              { active: 'Summon Skitterbots', linked: [] }
+            ]
+          },
+          {
+            name: 'Combatant - All-Rounder',
+            role: 'Starter / General',
+            note: 'Good starter merc. Scales well with armor stacking late game.',
+            groups: [
+              { active: 'Static Strike', linked: ['Elemental Damage with Attacks', 'More Duration', 'Chain'] },
+              { active: 'Frost Blades', linked: ['Return', 'Elemental Damage with Attacks', 'Chain'] },
+              { active: 'Wrath', linked: [] },
+              { active: 'Purity of Ice', linked: [] }
+            ]
+          }
         ]
       },
       {
-        name: 'Combatant - All-Rounder',
-        role: 'Starter / General',
-        note: 'Good starter merc. Scales well with armor stacking late game.',
-        groups: [
-          { active: 'Static Strike', linked: ['Elemental Damage with Attacks', 'More Duration', 'Chain'] },
-          { active: 'Frost Blades', linked: ['Return', 'Elemental Damage with Attacks', 'Chain'] },
-          { active: 'Wrath', linked: [] },
-          { active: 'Purity of Ice', linked: [] }
+        creator: 'SpicySushi',
+        source: 'SpicysushiPoE YouTube',
+        sourceUrl: 'https://www.youtube.com/@SpicysushiPoE',
+        presets: [
+          {
+            name: 'Sniper',
+            role: 'Map Clearing',
+            note: 'Ranged projectile build. Rain of Arrows also works.',
+            groups: [
+              { active: 'Tornado Shot', linked: ['Greater Multiple Projectiles', 'Gilded', 'More Projectiles'] },
+              { active: 'Haste', linked: [] },
+              { active: 'Totem', linked: [] }
+            ],
+            avoid: ['Brutality', 'Arrow Nova']
+          },
+          {
+            name: 'Kineticist',
+            role: 'Map Clearing',
+            note: 'Dual Kinetic Blast setup. Barrage does NOT brick this build.',
+            groups: [
+              { active: 'Greater Kinetic Blast of Clustering', linked: ['Return', 'Chain', 'Elemental Damage with Attacks', 'Greater Multiple Projectiles', 'Critical Damage'] },
+              { active: 'Kinetic Blast of Clustering', linked: ['Return', 'Chain', 'Elemental Damage with Attacks', 'Greater Multiple Projectiles', 'Critical Damage'] },
+              { active: 'Haste', linked: [] }
+            ],
+            avoid: ['Kinetic Bolt', 'Kinetic Rain of Impact']
+          },
+          {
+            name: 'Combatant',
+            role: 'Starter / General',
+            note: 'Frost Blades + Static Strike linked together. Tailor supports to playstyle.',
+            groups: [
+              { active: 'Frost Blades', linked: ['Elemental Damage with Attacks', 'Hypothermia', 'Faster Attacks', 'Chain'] },
+              { active: 'Static Strike', linked: ['Elemental Damage with Attacks', 'Hypothermia', 'Faster Attacks', 'Chain'] },
+              { active: 'Wrath', linked: [] }
+            ],
+            avoid: ['Wild Strike', 'Spectral Helix', 'Elemental Hit', 'Pierce']
+          },
+          {
+            name: 'Manyshot',
+            role: 'Hybrid',
+            note: 'Ice Shot with Returning Projectiles on both skills.',
+            groups: [
+              { active: 'Ice Shot', linked: ['Return', 'Greater Multiple Projectiles', 'Elemental Damage with Attacks', 'Hypothermia', 'Critical Damage'] },
+              { active: 'Vaal Ice Shot', linked: ['Return', 'Greater Multiple Projectiles', 'Elemental Damage with Attacks', 'Hypothermia', 'Critical Damage'] }
+            ],
+            avoid: ['Icicle Rain']
+          },
+          {
+            name: 'Cruel Mistress',
+            role: 'Hybrid',
+            note: 'Curse-focused mercenary with life leech and fire support options.',
+            groups: [
+              { active: 'Soulrend of Reaping', linked: ['Return', 'Greater Multiple Projectiles', 'Chain'] },
+              { active: 'Summon Void', linked: [] },
+              { active: 'Envy', linked: [] }
+            ]
+          }
+        ]
+      },
+      {
+        creator: 'Nerotox',
+        source: 'Nerotox YouTube',
+        sourceUrl: 'https://www.youtube.com/@nerotox813',
+        presets: [
+          {
+            name: 'Many-shot Marauder',
+            role: 'Map Clearing',
+            note: 'Many-shot is the only hard requirement. Ice Shot breaks the build.',
+            groups: [
+              { active: 'Many-shot', linked: ['Return', 'Hypothermia', 'Greater Hypothermia', 'Elemental Damage with Attacks', 'Greater Elemental Damage'] },
+              { active: 'Grace', linked: [] }
+            ],
+            avoid: ['Ice Shot']
+          },
+          {
+            name: 'Combatant (Frost Blades)',
+            role: 'Hybrid',
+            note: 'Strength-deck merc. Chain is mandatory. Return useful for delving only.',
+            groups: [
+              { active: 'Frost Blades', linked: ['Chain', 'Elemental Damage with Attacks', 'Hypothermia', 'Faster Attacks'] },
+              { active: 'Static Strike', linked: ['Chain', 'Elemental Damage with Attacks', 'Hypothermia', 'Faster Attacks'] },
+              { active: 'Riposte', linked: [] },
+              { active: 'Frostblink', linked: [] }
+            ],
+            avoid: ['Pierce', 'Multistrike']
+          },
+          {
+            name: 'Combatant (Wild Strike)',
+            role: 'Single Target',
+            note: 'Cheap GG at ~5 divines. Does as much ST DPS as 200-300d Frost Blades.',
+            groups: [
+              { active: 'Wild Strike', linked: ['Return', 'Elemental Damage with Attacks', 'Greater Elemental Damage', 'Hypothermia', 'Greater Hypothermia', 'Faster Attacks'] },
+              { active: 'Static Strike', linked: [] },
+              { active: 'Riposte', linked: [] },
+              { active: 'Frostblink', linked: [] }
+            ],
+            avoid: ['Multistrike']
+          },
+          {
+            name: 'Kineticist (KBoc)',
+            role: 'Map Clearing',
+            note: 'Not target farmable on Atlas. Expensive but powerful. Return + clearing link mandatory.',
+            groups: [
+              { active: 'Kinetic Blast of Clustering', linked: ['Return', 'Chain', 'Greater Multiple Projectiles', 'Elemental Damage with Attacks'] },
+              { active: 'Greater Kinetic Blast', linked: [] },
+              { active: 'Haste', linked: [] },
+              { active: 'Flame Dash', linked: [] }
+            ],
+            avoid: ['Kinetic Bolt', 'Power Siphon', 'Kinetic Rain of Impact', 'Critical Strike Chance']
+          }
         ]
       }
     ];
@@ -888,97 +1007,145 @@
     // Auto-focus on load
     window.addEventListener('load', () => warrantInput.focus());
 
-    // Render presets
+    // Build trade URL from preset
+    function buildTradeUrl(preset) {
+      const statGroups = [];
+      for (const g of preset.groups) {
+        const filters = [];
+        const statId = SKILL_STAT_MAP[g.active];
+        if (statId && !statId.startsWith('TODO_')) {
+          filters.push({ id: statId });
+        }
+        for (const l of g.linked) {
+          const statId2 = SKILL_STAT_MAP[l];
+          if (statId2 && !statId2.startsWith('TODO_')) {
+            filters.push({ id: statId2 });
+          }
+        }
+        if (filters.length > 0) {
+          statGroups.push({ type: 'mercenary', filters });
+        }
+      }
+
+      if (preset.avoid && preset.avoid.length > 0) {
+        const notFilters = [];
+        for (const a of preset.avoid) {
+          const statId = SKILL_STAT_MAP[a];
+          if (statId && !statId.startsWith('TODO_')) {
+            notFilters.push({ id: statId });
+          }
+        }
+        if (notFilters.length > 0) {
+          statGroups.push({ type: 'not', filters: notFilters });
+        }
+      }
+
+      if (statGroups.length === 0) return '';
+      const payload = {
+        query: {
+          status: { option: 'securable' },
+          stats: statGroups
+        },
+        sort: { price: 'asc' }
+      };
+      return 'https://www.pathofexile.com/trade/search/' + LEAGUE + '?q=' + encodeURIComponent(JSON.stringify(payload));
+    }
+
+    // Render presets grouped by creator
     function renderPresets() {
       presetsList.innerHTML = '';
-      for (const preset of PRESETS) {
-        const card = document.createElement('div');
-        card.className = 'bg-zinc-900/50 border border-zinc-800 rounded-md p-3 space-y-2';
+      const roleColors = {
+        'Map Clearing': 'bg-green-900/40 text-green-400 border-green-800/50',
+        'Hybrid': 'bg-blue-900/40 text-blue-400 border-blue-800/50',
+        'Single Target': 'bg-red-900/40 text-red-400 border-red-800/50',
+        'Starter / General': 'bg-amber-900/40 text-amber-400 border-amber-800/50'
+      };
 
-        const statGroups = [];
-        for (const g of preset.groups) {
-          const filters = [];
-          const statId = SKILL_STAT_MAP[g.active];
-          if (statId && !statId.startsWith('TODO_')) {
-            filters.push({ id: statId });
-          }
-          for (const l of g.linked) {
-            const statId2 = SKILL_STAT_MAP[l];
-            if (statId2 && !statId2.startsWith('TODO_')) {
-              filters.push({ id: statId2 });
+      for (const group of PRESET_GROUPS) {
+        // Collapsible section wrapper
+        const section = document.createElement('div');
+        section.className = 'border border-zinc-800 rounded-md overflow-hidden';
+
+        // Collapsible header
+        const header = document.createElement('button');
+        header.className = 'w-full flex items-center justify-between px-3 py-2 bg-zinc-900/80 text-left hover:bg-zinc-800/60 transition-colors';
+        let headerHtml = '<span class="font-semibold text-sm text-zinc-200">' + escapeHtml(group.creator) + '</span>';
+        headerHtml += '<span class="text-zinc-500 text-xs ml-auto flex items-center gap-1">' +
+          group.presets.length + ' preset' + (group.presets.length > 1 ? 's' : '') +
+          '<svg class="w-4 h-4 chevron-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' +
+          '</span>';
+        header.innerHTML = headerHtml;
+
+        // Presets container
+        const container = document.createElement('div');
+        container.className = 'preset-container hidden';
+
+        // Source link inside collapsed area
+        if (group.source) {
+          const sourceBar = document.createElement('div');
+          sourceBar.className = 'px-3 py-1.5 bg-zinc-900/30 border-b border-zinc-800/60';
+          const sourceHtml = group.sourceUrl
+            ? '<span class="text-xs text-zinc-500">Source: </span><a href="' + escapeHtml(group.sourceUrl) + '" target="_blank" class="text-xs text-amber-500/80 hover:text-amber-400 underline">' + escapeHtml(group.source) + '</a>'
+            : '<span class="text-xs text-zinc-500">Source: ' + escapeHtml(group.source) + '</span>';
+          sourceBar.innerHTML = sourceHtml;
+          container.appendChild(sourceBar);
+        }
+
+        for (const preset of group.presets) {
+          const card = document.createElement('div');
+          card.className = 'border-t border-zinc-800 p-3 space-y-2';
+
+          const presetUrl = buildTradeUrl(preset);
+
+          let groupsHtml = '<div class="space-y-1.5">';
+          for (const g of preset.groups) {
+            groupsHtml += '<div class="flex flex-wrap items-center gap-1">' +
+              '<span class="badge text-[10px] py-0.5">' + escapeHtml(g.active) + '</span>';
+            for (const l of g.linked) {
+              groupsHtml += ' <span class="badge badge-support text-[10px] py-0.5">' + escapeHtml(l) + '</span>';
             }
+            groupsHtml += '</div>';
           }
-          if (filters.length > 0) {
-            statGroups.push({ type: 'mercenary', filters });
-          }
-        }
-
-        if (preset.avoid && preset.avoid.length > 0) {
-          const notFilters = [];
-          for (const a of preset.avoid) {
-            const statId = SKILL_STAT_MAP[a];
-            if (statId && !statId.startsWith('TODO_')) {
-              notFilters.push({ id: statId });
+          if (preset.avoid && preset.avoid.length > 0) {
+            groupsHtml += '<div class="flex flex-wrap items-center gap-1 pt-1 border-t border-zinc-800/60">' +
+              '<span class="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">Avoid</span>';
+            for (const a of preset.avoid) {
+              groupsHtml += ' <span class="badge text-[10px] py-0.5" style="color: #f87171; border-color: rgba(248,113,113,0.3);">' + escapeHtml(a) + '</span>';
             }
-          }
-          if (notFilters.length > 0) {
-            statGroups.push({ type: 'not', filters: notFilters });
-          }
-        }
-
-        let presetUrl = '';
-        if (statGroups.length > 0) {
-          const payload = {
-            query: {
-              status: { option: 'securable' },
-              stats: statGroups
-            },
-            sort: { price: 'asc' }
-          };
-          presetUrl = 'https://www.pathofexile.com/trade/search/' + LEAGUE + '?q=' + encodeURIComponent(JSON.stringify(payload));
-        }
-
-        const roleColors = {
-          'Map Clearing': 'bg-green-900/40 text-green-400 border-green-800/50',
-          'Hybrid': 'bg-blue-900/40 text-blue-400 border-blue-800/50',
-          'Single Target': 'bg-red-900/40 text-red-400 border-red-800/50',
-          'Starter / General': 'bg-amber-900/40 text-amber-400 border-amber-800/50'
-        };
-
-        let groupsHtml = '<div class="space-y-1.5">';
-        for (const g of preset.groups) {
-          groupsHtml += '<div class="flex flex-wrap items-center gap-1">' +
-            '<span class="badge text-[10px] py-0.5">' + escapeHtml(g.active) + '</span>';
-          for (const l of g.linked) {
-            groupsHtml += ' <span class="badge badge-support text-[10px] py-0.5">' + escapeHtml(l) + '</span>';
+            groupsHtml += '</div>';
           }
           groupsHtml += '</div>';
+
+          card.innerHTML = '<div class="flex items-start justify-between gap-2">' +
+            '<div>' +
+            '<h3 class="font-semibold text-sm text-zinc-100">' + escapeHtml(preset.name) + '</h3>' +
+            '<span class="inline-block text-xs px-1.5 py-0.5 rounded border ' + (roleColors[preset.role] || 'bg-zinc-800 text-zinc-400 border-zinc-700') + '">' + escapeHtml(preset.role) + '</span>' +
+            '</div>' +
+            '</div>' +
+            '<p class="text-xs text-zinc-500">' + escapeHtml(preset.note) + '</p>' +
+            groupsHtml +
+            (presetUrl ? '<a href="' + presetUrl + '" target="_blank" rel="noopener" class="btn-primary text-xs py-1.5 px-3">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>' +
+              'Search Trade' +
+            '</a>' : '<span class="text-xs text-zinc-600 italic">Trade link unavailable (missing stat IDs)</span>') +
+            '</div>';
+
+          container.appendChild(card);
         }
-        if (preset.avoid && preset.avoid.length > 0) {
-          groupsHtml += '<div class="flex flex-wrap items-center gap-1 pt-1 border-t border-zinc-800/60">' +
-            '<span class="text-[10px] text-zinc-600 font-medium uppercase tracking-wider">Avoid</span>';
-          for (const a of preset.avoid) {
-            groupsHtml += ' <span class="badge text-[10px] py-0.5" style="color: #f87171; border-color: rgba(248,113,113,0.3);">' + escapeHtml(a) + '</span>';
+
+        section.appendChild(header);
+        section.appendChild(container);
+        presetsList.appendChild(section);
+
+        // Toggle collapse
+        header.addEventListener('click', function () {
+          const isHidden = container.classList.contains('hidden');
+          container.classList.toggle('hidden');
+          const chevron = header.querySelector('.chevron-icon');
+          if (chevron) {
+            chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
           }
-          groupsHtml += '</div>';
-        }
-        groupsHtml += '</div>';
-
-        card.innerHTML = '<div class="flex items-start justify-between gap-2">' +
-          '<div>' +
-          '<h3 class="font-semibold text-sm text-zinc-100">' + escapeHtml(preset.name) + '</h3>' +
-          '<span class="inline-block text-xs px-1.5 py-0.5 rounded border ' + (roleColors[preset.role] || 'bg-zinc-800 text-zinc-400 border-zinc-700') + '">' + escapeHtml(preset.role) + '</span>' +
-          '</div>' +
-          '</div>' +
-          '<p class="text-xs text-zinc-500">' + escapeHtml(preset.note) + '</p>' +
-          groupsHtml +
-          (presetUrl ? '<a href="' + presetUrl + '" target="_blank" rel="noopener" class="btn-primary text-xs py-1.5 px-3">' +
-            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>' +
-            'Search Trade' +
-          '</a>' : '<span class="text-xs text-zinc-600 italic">Trade link unavailable (missing stat IDs)</span>') +
-          '</div>';
-
-        presetsList.appendChild(card);
+        });
       }
     }
 
